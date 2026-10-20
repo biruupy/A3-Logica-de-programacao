@@ -2,6 +2,8 @@
 # Sao as mesmas classes do plataforma_rh.py, so que sem o menu do terminal
 # Aqui o holerite vira uma LISTA de linhas (tuplas), assim a janela consegue mostrar
 
+import unicodedata
+
 # Pacote iFood Beneficios (padrao da empresa)
 VALOR_VA = 740.00  # vale alimentacao
 VALOR_VR = 2000.00  # vale refeicao
@@ -31,6 +33,21 @@ def formatar_percentual(valor):
 # Coloca pontos e traco no cpf: 12345678901 -> 123.456.789-01
 def formatar_cpf(cpf):
     return cpf[0:3] + "." + cpf[3:6] + "." + cpf[6:9] + "-" + cpf[9:11]
+
+
+def normalizar_nome(nome):
+    nome = unicodedata.normalize("NFC", " ".join(nome.split()))
+    partes = nome.split()
+    if len(partes) < 2:
+        return None
+
+    for palavra in partes:
+        palavra = palavra.replace("’", "'").replace("‐", "-").replace("‑", "-")
+        componentes = palavra.replace("-", "'").split("'")
+        if any(not componente or not componente.isalpha() for componente in componentes):
+            return None
+
+    return nome
 
 
 # Tabela progressiva do INSS (2025)

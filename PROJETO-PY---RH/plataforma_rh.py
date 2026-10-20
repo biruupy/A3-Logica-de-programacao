@@ -5,6 +5,7 @@
 
 import os
 import sys
+import unicodedata
 
 EMPRESA = "VANGUARD SOLUTIONS"
 LARGURA = 72  # largura das linhas do holerite
@@ -68,6 +69,21 @@ def formatar_percentual(valor):
 # Coloca pontos e traco no cpf: 12345678901 -> 123.456.789-01
 def formatar_cpf(cpf):
     return cpf[0:3] + "." + cpf[3:6] + "." + cpf[6:9] + "-" + cpf[9:11]
+
+
+def normalizar_nome(nome):
+    nome = unicodedata.normalize("NFC", " ".join(nome.split()))
+    partes = nome.split()
+    if len(partes) < 2:
+        return None
+
+    for palavra in partes:
+        palavra = palavra.replace("’", "'").replace("‐", "-").replace("‑", "-")
+        componentes = palavra.replace("-", "'").split("'")
+        if any(not componente or not componente.isalpha() for componente in componentes):
+            return None
+
+    return nome
 
 
 # Uma linha do holerite: codigo, descricao, referencia, provento e desconto
@@ -542,10 +558,10 @@ def ler_sim_nao(mensagem):
 
 # Funcao para ler o nome sem deixar vazio
 def ler_nome():
-    nome = input("Nome: ").strip()  # assim "   " vira "" e cai no while
-    while nome == "":
-        print("O nome nao pode ficar vazio!")
-        nome = input("Nome: ").strip()
+    nome = normalizar_nome(input("Nome completo: "))
+    while nome is None:
+        print("Nome invalido. Use nome e sobrenome com letras, espacos, hifen ou apostrofo.")
+        nome = normalizar_nome(input("Nome completo: "))
     return nome
 
 
@@ -563,7 +579,7 @@ def cpf_ja_cadastrado(lista, cpf):
     for colaborador in lista:  # passa por todo mundo cadastrado
         if colaborador.get_cpf() == cpf:
             print("\nERRO: o CPF " + formatar_cpf(cpf) + " ja pertence a " + colaborador.get_nome() + "!")
-            print("Cadastro cancelado, voltando ao menu principal.")
+            print("A mesma pessoa nao pode ter dois vinculos. Cadastro cancelado.")
             return True
     return False  # rodou a lista toda e nao achou
 

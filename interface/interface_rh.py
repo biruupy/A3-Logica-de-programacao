@@ -11,6 +11,7 @@ from sistema_rh import ColaboradorCLT, ColaboradorAprendiz, ColaboradorEstagiari
 from sistema_rh import ColaboradorPJ, ColaboradorDiretor
 from sistema_rh import VALOR_VA, VALOR_VR
 from sistema_rh import formatar_valor, formatar_moeda, formatar_cpf
+from sistema_rh import normalizar_nome
 
 # Cores da empresa
 AZUL_ESCURO = "#1f2a44"
@@ -132,20 +133,24 @@ def limpar_formulario():
 
 
 def cadastrar():
-    nome = entrada_nome.get().strip()
+    nome = normalizar_nome(entrada_nome.get())
     cpf = entrada_cpf.get().strip()
     tipo = combo_tipo.get()
 
-    if nome == "":
-        aviso("O nome não pode ficar vazio!")
+    if nome is None:
+        aviso("Nome inválido. Informe nome e sobrenome usando apenas letras, espaços, hífen ou apóstrofo.")
         return
     if len(cpf) != 11 or not cpf.isdigit():
         aviso("CPF inválido! Digite os 11 números sem ponto e traço.")
         return
-    # nao pode ter 2 pessoas com o mesmo cpf
+    # Uma pessoa identificada pelo CPF só pode ter um vínculo cadastrado.
     for colaborador in colaboradores:
         if colaborador.get_cpf() == cpf:
-            messagebox.showerror("CPF duplicado", "O CPF " + formatar_cpf(cpf) + " já pertence a " + colaborador.get_nome() + "!")
+            messagebox.showerror(
+                "Vínculo já cadastrado",
+                "O CPF " + formatar_cpf(cpf) + " já pertence a " + colaborador.get_nome()
+                + " (" + colaborador.get_tipo() + "). A mesma pessoa não pode ter dois vínculos."
+            )
             return
 
     if tipo == "CLT Comum" or tipo == "Jovem Aprendiz":
